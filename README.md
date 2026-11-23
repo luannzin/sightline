@@ -154,6 +154,8 @@ the server in the middle this was supposed to avoid.
   from that key, so someone else holding the link can't pretend to be you, and two of your shares
   can't be tied together by it.
 - Anyone with the link can watch until you stop. Treat it like the screen itself.
+- The site counts page views with Vercel Web Analytics. The address it reports stops before the
+  `#`.
 
 ## Run it yourself
 

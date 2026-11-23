@@ -3,8 +3,9 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
-// The link's secret lives in the page, so the built page runs only its own code. Scripts come
-// from the site alone; the network is the signaling relays (wss:). Dev skips it: Vite injects
+// The link's secret lives in the page, so the built page runs only code from the site: its own,
+// and Vercel's page view counter at /_vercel/insights (src/main.tsx cuts the `#` off what it
+// sends). The rest of the network is the signaling relays (wss:). Dev skips it: Vite injects
 // inline scripts there.
 const CSP = [
   "default-src 'self'",
