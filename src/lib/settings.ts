@@ -35,7 +35,8 @@ export const settings = {
     return fresh;
   },
   setProfile: (profile: Profile) => write("profile", profile),
-  volume: () => read("volume", 1),
+  // 0 was saved as a level before muting had its own state: treat it as unset, or sound never comes back
+  volume: () => read("volume", 1) || 1,
   setVolume: (volume: number) => write("volume", volume),
   turn: () => read<Turn>("turn", { url: "", username: "", credential: "" }),
   setTurn: (turn: Turn) => write("turn", turn),

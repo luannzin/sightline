@@ -30,6 +30,9 @@ export async function captureScreen(controller?: CaptureController) {
     surfaceSwitching: "include",
     selfBrowserSurface: "exclude",
     monitorTypeSurfaces: "include",
+    // a window offers its own sound rather than the whole computer's (Chrome 141+), so a
+    // call's voices don't go out with it
+    windowAudio: "window",
   } as DisplayMediaStreamOptions);
   return stream;
 }

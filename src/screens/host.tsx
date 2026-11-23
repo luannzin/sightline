@@ -1,6 +1,7 @@
 import {
   CheckIcon,
   CopyIcon,
+  Link2Icon,
   MonitorUpIcon,
   RefreshCwIcon,
   SquareIcon,
@@ -52,6 +53,10 @@ export function Host() {
     return () => {
       removeEventListener("beforeunload", warn);
       removeEventListener("pagehide", end);
+      // Leaving this screen (a link opened in this tab) would leave the capture running unseen.
+      // Safe under StrictMode: its double run happens on mount, when there's no share yet; after
+      // Stop it's a no-op.
+      end();
     };
   }, [share]);
 
@@ -94,6 +99,7 @@ export function Host() {
       <Live
         share={share}
         mode={mode}
+        support={support}
         onMode={(m) => {
           setMode(m);
           share.setMode(m);
@@ -161,11 +167,13 @@ function SoundNote({ support }: { support: SoundSupport }) {
 function Live({
   share,
   mode,
+  support,
   onMode,
   onStop,
 }: {
   share: Share;
   mode: Mode;
+  support: SoundSupport;
   onMode: (mode: Mode) => void;
   onStop: () => void;
 }) {
@@ -235,7 +243,7 @@ function Live({
       </div>
 
       <div className="mt-8 flex flex-col gap-8">
-        <LinkField link={share.link} />
+        <LinkField share={share} />
 
         <div className="flex flex-col items-start gap-2">
           <span id="mode-label" className="font-medium text-sm">
@@ -258,15 +266,17 @@ function Live({
           </p>
         </div>
 
-        <Sound share={share} />
+        <Sound share={share} support={support} />
         <Watching share={share} watchers={watchers} />
       </div>
     </Page>
   );
 }
 
-function LinkField({ link }: { link: string }) {
+function LinkField({ share }: { share: Share }) {
+  const { link } = share;
   const [copied, setCopied] = useState(false);
+  const [resetting, setResetting] = useState(false);
   useEffect(() => {
     if (!copied) return;
     const t = setTimeout(() => setCopied(false), 1600);
@@ -301,14 +311,44 @@ function LinkField({ link }: { link: string }) {
           </span>
           {copied ? "Copied" : "Copy link"}
         </Button>
+        <Button
+          variant="outline"
+          loading={resetting}
+          onClick={() => {
+            setResetting(true);
+            share
+              .resetLink()
+              .then((done) => {
+                if (!done) return; // sharing stopped meanwhile: there's no link to send
+                toastManager.add({
+                  title: "New link",
+                  description: "The old one stopped working. Copy this one and send it.",
+                });
+              })
+              .catch((error: Error) =>
+                toastManager.add({
+                  type: "error",
+                  title: "Unable to make a new link",
+                  description: error.message || "Check your connection and try again.",
+                }),
+              )
+              .finally(() => setResetting(false));
+          }}
+        >
+          <Link2Icon aria-hidden="true" />
+          New link
+        </Button>
       </div>
-      <FieldDescription>Anyone with this link can watch until you stop sharing.</FieldDescription>
+      <FieldDescription>
+        Anyone with this link can watch until you stop sharing. A new link cuts off everyone on the
+        old one, without stopping the share.
+      </FieldDescription>
     </Field>
   );
 }
 
-function Sound({ share }: { share: Share }) {
-  const { screen, extra } = share.sound;
+function Sound({ share, support }: { share: Share; support: SoundSupport }) {
+  const { screen, wholeScreen, extra } = share.sound;
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -349,8 +389,12 @@ function Sound({ share }: { share: Share }) {
       </h2>
       <p className="text-muted-foreground">
         {screen
-          ? "Sending the sound from what you're sharing."
-          : "What you're sharing has no sound."}
+          ? wholeScreen
+            ? "Sending your whole computer's sound, a call you're in included. To keep a call out, share a tab or a single window instead."
+            : "Sending the sound from what you're sharing."
+          : support === "full" || support === "mac"
+            ? "What you're sharing has no sound. To add it, click Change source and turn on the audio option in the picker."
+            : "What you're sharing has no sound."}
         {extra && " Also sending a sound source."}
       </p>
       {extra ? (

@@ -9,11 +9,24 @@ import type { Mode } from "./tuning";
 
 const META = { kind: "screen" };
 
+/** A fresh room with its own secret; the link carries the host's id for this room. */
+async function openRoom() {
+  const secret = newSecret();
+  const session = await enter(secret);
+  try {
+    const { userId } = await session.room.getSelf();
+    return { session, link: inviteUrl({ secret, hostId: userId }, location) };
+  } catch (error) {
+    void session.room.leave();
+    throw error;
+  }
+}
+
 /** `profile` is null until their name and critter arrive. */
 export type Watcher = { userId: string; profile: Profile | null; connections: RTCPeerConnection[] };
 
 export class Share {
-  readonly link: string;
+  link: string;
   /** What viewers receive: the screen's video, its sound, and the extra sound source. */
   readonly out: MediaStream;
   private screen: MediaStream;
@@ -33,16 +46,7 @@ export class Share {
     this.link = link;
     this.out = new MediaStream(screen.getTracks());
     this.watchEnd();
-    const { room, profiles } = session;
-    // newcomers get the stream as they arrive; everyone else already has it
-    this.offs.push(
-      room.onUserJoin(({ userId }) => {
-        void room.addStream(this.out, { target: userId, metadata: META });
-        onChange();
-      }),
-      room.onUserLeave(onChange),
-      profiles.onChange(onChange),
-    );
+    this.listen();
   }
 
   /** Asks for a screen, then opens the room. Throws if the person cancels the picker. */
@@ -53,10 +57,7 @@ export class Share {
     hint(screen.getVideoTracks()[0], mode);
     setMode(mode);
     try {
-      const secret = newSecret();
-      const session = await enter(secret);
-      const { userId } = await session.room.getSelf();
-      const link = inviteUrl({ secret, hostId: userId }, location);
+      const { session, link } = await openRoom();
       const share = new Share(session, screen, link, profile, onChange, onEnd);
       await share.publish();
       return share;
@@ -67,7 +68,12 @@ export class Share {
   }
 
   get sound() {
-    return { screen: this.screen.getAudioTracks().length > 0, extra: this.extra };
+    return {
+      screen: this.screen.getAudioTracks().length > 0,
+      // a monitor's sound is the whole computer's mix; a tab or window can be just its own
+      wholeScreen: this.screen.getVideoTracks()[0]?.getSettings().displaySurface === "monitor",
+      extra: this.extra,
+    };
   }
 
   watchers(): Watcher[] {
@@ -100,12 +106,22 @@ export class Share {
     const next = await captureScreen(ctl?.controller);
     ctl?.stayHere();
     hint(next.getVideoTracks()[0], mode);
-    for (const t of this.screen.getTracks()) {
-      this.out.removeTrack(t);
-      t.stop();
+    // Swap in place where both have the kind: removing every track at once and adding new ones
+    // makes the viewer's browser put them in a new stream, and the player stays on the old, empty
+    // one. Only a sound that appears or goes away renegotiates.
+    for (const kind of ["video", "audio"]) {
+      const old = this.screen.getTracks().find((t) => t.kind === kind);
+      const fresh = next.getTracks().find((t) => t.kind === kind);
+      // it only rejects for a viewer leaving mid-swap; the others get the new track anyway, and
+      // throwing here would leave the new capture running with nothing holding it
+      if (old && fresh) await this.session.room.replaceTrack(old, fresh).catch(() => {});
+      if (old) {
+        this.out.removeTrack(old);
+        old.stop();
+      }
+      if (fresh) this.out.addTrack(fresh);
     }
     this.screen = next;
-    for (const t of next.getTracks()) this.out.addTrack(t);
     this.watchEnd();
     await this.publish();
   }
@@ -124,6 +140,40 @@ export class Share {
     await this.publish();
   }
 
+  /**
+   * A new link for the same capture: whoever has the old one is cut off, nothing is re-picked.
+   * False when the share stopped meanwhile. On failure the old link keeps working.
+   */
+  async resetLink() {
+    if (this.stopped) return false;
+    const next = await openRoom();
+    if (this.stopped) {
+      void next.session.room.leave();
+      return false;
+    }
+    const old = { session: this.session, link: this.link };
+    for (const off of this.offs) off();
+    this.session = next.session;
+    this.link = next.link;
+    this.listen();
+    try {
+      await this.publish();
+    } catch (error) {
+      for (const off of this.offs) off();
+      void next.session.room.leave();
+      this.session = old.session;
+      this.link = old.link;
+      // stop() ran meanwhile and only left the new room: the old one has to go too
+      if (this.stopped) void old.session.room.leave();
+      else this.listen();
+      throw error;
+    }
+    // the old room's viewers see "ended" instead of waiting a minute for a reconnect
+    await old.session.show.set({ ...this.profile, live: false, sound: false }).catch(() => {});
+    await old.session.room.leave();
+    return !this.stopped;
+  }
+
   async remove(userId: string) {
     await this.session.room.ban(userId);
     this.onChange();
@@ -136,6 +186,19 @@ export class Share {
     for (const t of this.out.getTracks()) t.stop();
     await this.session.show.set({ ...this.profile, live: false, sound: false }).catch(() => {});
     await this.session.room.leave();
+  }
+
+  private listen() {
+    const { room, profiles } = this.session;
+    // newcomers get the stream as they arrive; everyone else already has it
+    this.offs = [
+      room.onUserJoin(({ userId }) => {
+        void room.addStream(this.out, { target: userId, metadata: META });
+        this.onChange();
+      }),
+      room.onUserLeave(this.onChange),
+      profiles.onChange(this.onChange),
+    ];
   }
 
   /** Syncs the outgoing tracks to every viewer (Trystero adds and removes the difference). */

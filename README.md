@@ -110,6 +110,23 @@ loops back, because the people watching never send sound to you.
 Chrome also has a flag, `--enable-features=PulseaudioLoopbackForScreenShare`, that's meant to put
 system sound in the picker itself. It's off by default and I haven't tried it.
 
+### Sound while you're in a call
+
+Sharing a whole screen with sound sends everything your computer plays, from every screen at once,
+including the people talking in Discord or any other call. If they're watching too, they hear
+themselves back. To send only what you mean to:
+
+- **Share a tab.** A tab sends only its own sound.
+- **Share one window.** Chrome 141 and later can offer that window's own sound in the picker,
+  where your system supports it.
+- **Route one app into a virtual cable (Windows).** Install
+  [VB-CABLE](https://vb-audio.com/Cable/), then in **Settings › System › Sound › Volume mixer**
+  set the app's output to **CABLE Input**. Share your screen with the audio option off, click
+  **Add a sound source** and pick **CABLE Output**. To keep hearing the app yourself, turn on
+  **Listen to this device** for CABLE Output in the classic Sound control panel.
+- **On Linux**, the same idea with a null sink: route the app to it and add its monitor as the
+  sound source, as in [Sound on Linux](#sound-on-linux).
+
 ## When it doesn't connect
 
 Two browsers connect directly with help from public STUN servers, and that works for most home and
@@ -145,6 +162,8 @@ capture on HTTPS or localhost).
 bun install
 bun run dev        # http://localhost:5173
 bun run test       # the SDP rewrite, codec choice, links, critters, profiles
+bun run e2e        # a real host and viewer in headless Chromium (needs the internet and
+                   # `bunx playwright-core install chromium` once, or CHROMIUM_PATH)
 bun run build      # dist/
 ```
 

@@ -426,8 +426,10 @@ function Stage({
           value={muted ? 0 : volume}
           onValueChange={(v) => {
             const next = Array.isArray(v) ? v[0] : v;
-            setVolume(next);
+            // 0 means muted, not a level: unmuting brings back the last one
             setMuted(next === 0);
+            if (next === 0) return;
+            setVolume(next);
             settings.setVolume(next);
           }}
         />
