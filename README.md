@@ -57,10 +57,12 @@ wait up to a minute for you to come back. From there you can:
   frame rate drop, for code and documents. Motion keeps 60 frames per second and lets resolution
   give, for video and games.
 - **Change source** to another screen, window or tab. The link stays the same.
+- **New link**, next to **Copy link**. Everyone on the old link sees the share end, and you keep
+  sharing the same screen without picking it again.
 - **Add a sound source**: a mic, or your desktop sound on Linux (below).
 - **Remove** someone. They're disconnected, and the same link won't let them back in from that
-  browser. A private window gets around it, so for someone who really shouldn't watch, stop and
-  share again: the new link is a new room.
+  browser. A private window gets around it, so for someone who really shouldn't watch, click
+  **New link** and send it only to the others.
 - **Stop sharing**, or use the browser's own stop button. Both end it for everyone.
 
 <p align="center">
@@ -206,3 +208,11 @@ it's served at (no trailing slash) so link previews find their image; `.env` has
   comfortable range.
 - Choosing the codec needs a recent Chrome or Edge. Other browsers send their default.
 - Not measured yet: the delay from your screen to theirs, and how often a connection needs a relay.
+
+## Thanks
+
+[di0rio](https://github.com/di0rio) tested Sightline with friends in a Discord call and fixed what
+broke there ([#2](https://github.com/luannzin/sightline/pull/2)): changing the source no longer
+leaves viewers with no picture and no sound, a volume dragged to 0 no longer mutes every later
+visit, and a share no longer keeps running after your tab leaves it. He also added **New link**,
+the end-to-end tests and [Sound while you're in a call](#sound-while-youre-in-a-call).
