@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://sightline.luannzin.com/sitemap.xml

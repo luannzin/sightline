@@ -5,10 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="referrer" content="no-referrer" />
     <meta name="theme-color" content="#110d24" />
-    <title>Sightline</title>
-    <meta name="description" content="Show your screen with a link. Peer to peer, in the browser, with sound." />
+    <title>Sightline: your screen as a link</title>
+    <meta name="description" content="Share your screen as a link, live in the browser with sound. No account, nothing to install, and no server of mine in the middle." />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+    <link rel="alternate" type="text/markdown" href="%VITE_SITE_URL%/llms.txt" />
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+
+    <!-- For search engines and agents, which read this page before (or without) running it: the
+         app, tied to its author and its post by the @ids luannzin.com gives them. Data, not
+         script, so the CSP doesn't apply. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "@id": "%VITE_SITE_URL%/#app",
+        "name": "Sightline",
+        "url": "%VITE_SITE_URL%",
+        "description": "Share your screen as a link, live in the browser with sound. No account, nothing to install, and no server of mine in the middle.",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "image": "%VITE_SITE_URL%/og.png",
+        "author": {
+          "@type": "Person",
+          "@id": "https://www.luannzin.com/#person",
+          "name": "Luan Fabri",
+          "url": "https://www.luannzin.com"
+        },
+        "sameAs": ["https://github.com/luannzin/sightline"],
+        "subjectOf": { "@id": "https://www.luannzin.com/writing/your-screen-as-a-link#article" }
+      }
+    </script>
 
     <!-- The link preview chat apps unfurl (Discord, Slack, WhatsApp). Static: no server knows who's sharing. -->
     <meta property="og:type" content="website" />

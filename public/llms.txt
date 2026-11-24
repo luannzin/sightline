@@ -1,0 +1,32 @@
+# Sightline
+
+> Share your screen as a link, live in the browser with sound. No account, nothing to install, and no server of mine in the middle.
+
+Sightline is a static web page. You share your screen and get a link. Whoever opens it watches, live, in the browser, with sound. The video goes straight from your browser to theirs over WebRTC; the browsers find each other through public Nostr relays, and the link's secret comes after the `#`, so it never reaches the site.
+
+## Use it
+
+1. Open https://sightline.luannzin.com and click Share your screen.
+2. Pick a screen, a window or a tab in the browser's picker. To send sound, turn on the audio option there.
+3. Copy the link and paste it wherever: Discord, WhatsApp, an email.
+4. They open it and they're watching. There's nothing to fill in first.
+
+While sharing: Best for Text keeps every pixel sharp and lets the frame rate drop (code, documents); Best for Motion keeps 60 frames per second and lets resolution give (video, games). Change source switches to another screen, window or tab on the same link. New link ends the old one for everyone.
+
+## Sound
+
+| Sharing from | Sound |
+|---|---|
+| Chrome or Edge on Windows | Whole screen, a window or a tab |
+| Chrome or Edge on macOS | A tab anywhere; the whole screen on macOS 14.2 or later |
+| Chrome on Linux | A tab only (the README has a way around it) |
+| Firefox, Safari | None |
+
+Phones and tablets can watch but can't share: their browsers don't let a page capture the screen.
+
+## Links
+
+- App: https://sightline.luannzin.com
+- Source and README: https://github.com/luannzin/sightline
+- How it works: https://www.luannzin.com/writing/your-screen-as-a-link
+- Made by Luan Fabri: https://www.luannzin.com

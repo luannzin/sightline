@@ -177,6 +177,10 @@ previews take the production address from Vercel on their own.
 **Anything else**: build command `bun run build`, output `dist`. Set `VITE_SITE_URL` to the address
 it's served at (no trailing slash) so link previews find their image; `.env` has the default.
 
+`public/robots.txt`, `public/sitemap.xml` and `public/llms.txt` (what search engines and AI tools
+read about Sightline) name sightline.luannzin.com. A copy served elsewhere changes them or leaves
+them out.
+
 `tools/logo.py` draws the pixel-art mark, the icons, the link preview image and the banner
 (`python3 tools/logo.py`, needs Pillow).
 
